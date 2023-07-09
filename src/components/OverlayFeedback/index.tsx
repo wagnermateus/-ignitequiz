@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useWindowDimensions } from "react-native";
 import Animated, {
   Easing,
@@ -8,7 +9,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { Canvas, Rect, BlurMask } from "@shopify/react-native-skia";
 import { THEME } from "../../styles/theme";
-import { useEffect } from "react";
 
 const STATUS = [
   "transparent",
@@ -22,6 +22,7 @@ type Props = {
 
 export function OverlayFeedback({ status }: Props) {
   const opactity = useSharedValue(0);
+
   const { height, width } = useWindowDimensions();
 
   const styleAnimated = useAnimatedStyle(() => {
