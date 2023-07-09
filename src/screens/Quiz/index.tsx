@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 
 import Animated, {
   useAnimatedStyle,
@@ -23,6 +23,8 @@ import { Question } from "../../components/Question";
 import { QuizHeader } from "../../components/QuizHeader";
 import { ConfirmButton } from "../../components/ConfirmButton";
 import { OutlineButton } from "../../components/OutlineButton";
+import { THEME } from "../../styles/theme";
+import { ProgressBar } from "../../components/ProgressBar";
 
 interface Params {
   id: string;
@@ -134,6 +136,16 @@ export function Quiz() {
     },
   });
 
+  const fixedProgressBarStyles = useAnimatedStyle(() => {
+    return {
+      position: "absolute",
+      paddingTop: 50,
+      backgroundColor: THEME.COLORS.GREY_500,
+      width: "110%",
+      left: "-5%",
+    };
+  });
+
   useEffect(() => {
     const quizSelected = QUIZ.filter((item) => item.id === id)[0];
     setQuiz(quizSelected);
@@ -152,6 +164,13 @@ export function Quiz() {
 
   return (
     <View style={styles.container}>
+      <Animated.View style={fixedProgressBarStyles}>
+        <Text style={styles.title}>{quiz.title}</Text>
+        <ProgressBar
+          total={quiz.questions.length}
+          current={currentQuestion + 1}
+        />
+      </Animated.View>
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.question}
