@@ -38,6 +38,7 @@ export function OverlayFeedback({ status }: Props) {
       withTiming(1, { duration: 400, easing: Easing.bounce }),
       withTiming(0)
     );
+    console.log(status);
   }, [status]);
 
   return (
