@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
-import { Alert, BackHandler, Text, View } from "react-native";
+import { Alert, Text, View, BackHandler } from "react-native";
 
+import { useNavigation, useRoute } from "@react-navigation/native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSequence,
   withTiming,
   interpolate,
+  Extrapolate,
   Easing,
   useAnimatedScrollHandler,
-  Extrapolate,
   runOnJS,
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
-import { useNavigation, useRoute } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import { Audio } from "expo-av";
+
 import { styles } from "./styles";
+import { THEME } from "../../styles/theme";
 
 import { QUIZ } from "../../data/quiz";
 import { historyAdd } from "../../storage/quizHistoryStorage";
@@ -26,7 +28,6 @@ import { Question } from "../../components/Question";
 import { QuizHeader } from "../../components/QuizHeader";
 import { ConfirmButton } from "../../components/ConfirmButton";
 import { OutlineButton } from "../../components/OutlineButton";
-import { THEME } from "../../styles/theme";
 import { ProgressBar } from "../../components/ProgressBar";
 import { OverlayFeedback } from "../../components/OverlayFeedback";
 
@@ -40,7 +41,6 @@ const CARD_INCLINATION = 10;
 const CARD_SKIP_AREA = -200;
 
 export function Quiz() {
-  const [statusReply, setStatusReply] = useState(0);
   const [points, setPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -48,6 +48,8 @@ export function Quiz() {
   const [alternativeSelected, setAlternativeSelected] = useState<null | number>(
     null
   );
+
+  const [statusReply, setStatusReply] = useState(0);
 
   const shake = useSharedValue(0);
   const scrollY = useSharedValue(0);
@@ -97,6 +99,7 @@ export function Quiz() {
     } else {
       handleFinished();
     }
+    setStatusReply(0);
   }
 
   async function handleConfirm() {
@@ -105,13 +108,14 @@ export function Quiz() {
     }
 
     if (quiz.questions[currentQuestion].correct === alternativeSelected) {
-      setPoints((prevState) => prevState + 1);
-      await playSound(true);
       setStatusReply(1);
+      await playSound(true);
+
+      setPoints((prevState) => prevState + 1);
 
       handleNextQuestion();
     } else {
-      await playSound(false);
+      playSound(false);
       setStatusReply(2);
       shakeAnimation();
     }
@@ -171,13 +175,13 @@ export function Quiz() {
 
   const fixedProgressBarStyles = useAnimatedStyle(() => {
     return {
-      zIndex: 1,
       position: "absolute",
       paddingTop: 50,
+      zIndex: 1,
       backgroundColor: THEME.COLORS.GREY_500,
       width: "110%",
       left: "-5%",
-      opacity: interpolate(scrollY.value, [50, 90], [0, 1], Extrapolate.CLAMP),
+      opacity: interpolate(scrollY.value, [50, 90], [0, 10], Extrapolate.CLAMP),
       transform: [
         {
           translateY: interpolate(
@@ -210,6 +214,7 @@ export function Quiz() {
       if (event.translationX < CARD_SKIP_AREA) {
         runOnJS(handleSkipConfirm)();
       }
+
       cardPosition.value = withTiming(0);
     });
 
@@ -222,17 +227,12 @@ export function Quiz() {
       ],
     };
   });
+
   useEffect(() => {
     const quizSelected = QUIZ.filter((item) => item.id === id)[0];
     setQuiz(quizSelected);
     setIsLoading(false);
   }, []);
-
-  useEffect(() => {
-    if (quiz.questions) {
-      handleNextQuestion();
-    }
-  }, [points]);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
@@ -258,6 +258,7 @@ export function Quiz() {
           current={currentQuestion + 1}
         />
       </Animated.View>
+
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.question}
@@ -271,6 +272,7 @@ export function Quiz() {
             totalOfQuestions={quiz.questions.length}
           />
         </Animated.View>
+
         <GestureDetector gesture={onPan}>
           <Animated.View style={[shakeStyleAnimated, dragStyles]}>
             <Question
@@ -278,10 +280,11 @@ export function Quiz() {
               question={quiz.questions[currentQuestion]}
               alternativeSelected={alternativeSelected}
               setAlternativeSelected={setAlternativeSelected}
-              onUnmount={() => setStatusReply(0)}
+              //  onUnmount={() => setStatusReply(0)}
             />
           </Animated.View>
         </GestureDetector>
+
         <View style={styles.footer}>
           <OutlineButton title="Parar" onPress={handleStop} />
           <ConfirmButton onPress={handleConfirm} />
